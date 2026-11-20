@@ -170,7 +170,19 @@ SMS/USSD app in `app/`. Newest findings are added at the bottom of each section.
 - **Public repo rule:** device/SIM identifiers and the user's phone number live only in `CLAUDE.local.md` (git-ignored).
   Before every commit: `git grep --cached` for them. No screenshots of the Device/Messages pages.
 - New release: bump `<Version>` in `app/Directory.Build.props` → `app/installer/build-installer.ps1` →
-  `gh release create vX.Y.Z app/dist/CellularStudio-X.Y.Z-x64.msi --notes-file …`.
+  `gh release create vX.Y.Z app/dist/CellularStudio-X.Y.Z-x64.msi app/installer/CellularStudio-codesign.cer --notes-file …`.
+- License: **MIT** (`LICENSE`, © 2026 Surin Athukorala); also in installer License.rtf and assembly Copyright.
+
+### Code signing (2026-11-21)
+- **Self-signed** cert `CN=Surin Athukorala (Cellular Studio code signing)`, RSA-3072/SHA-256, thumbprint
+  `0FA0531163DABC4B48E009C2F266C9004864C526`, valid to 2031-11-21. Private key in `Cert:\CurrentUser\My`
+  (exportable; **no PFX on disk** — back it up yourself if needed, never into the repo). Public part:
+  `app/installer/CellularStudio-codesign.cer` (committed, also attached to releases).
+- Trusted on this PC via `certutil -user -addstore Root|TrustedPublisher` (Root needs a user click; the tool's
+  non-interactive PowerShell can't show that dialog → run certutil as a separate process).
+- Signing = `Set-AuthenticodeSignature` (Windows SDK/signtool not installed), timestamp `http://timestamp.digicert.com`.
+  Signing the .NET single-file exe after publish works (verified it still runs). Exe is signed **before** WiX packs it.
+- Switching to a real CA / Azure Trusted Signing cert later: import it and pass `-CertThumbprint`.
 
 ## Open items
 - [x] Recover modem registration (done via SetRegisterMode, no reboot).

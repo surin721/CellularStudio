@@ -15,7 +15,12 @@ Run `dist\CellularStudio-<version>-x64.msi`.
 - Uninstall from *Settings → Apps*. This removes the app, the shortcuts and the sign-in entry (even one enabled from
   inside the app). Your messages and settings in `%LOCALAPPDATA%\CellularStudio` are kept.
 
-To build the MSI: `installer\build-installer.ps1`. It publishes the app, regenerates the dialog artwork and runs WiX v5.
+To build the MSI: `installer\build-installer.ps1`. It publishes the app, **signs the exe**, regenerates the dialog
+artwork, runs WiX v5 and **signs the MSI**, with timestamped SHA-256 Authenticode signatures.
+- The signing certificate comes from `-CertThumbprint`, or `$env:CS_SIGN_THUMBPRINT`, or else the newest
+  "Cellular Studio code signing" certificate in `Cert:\CurrentUser\My`. Use `-SkipSign` for an unsigned build.
+- To switch to a CA-issued certificate later, import it into the store and pass its thumbprint. Nothing else changes.
+
 Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 
 ## Run it (without installing)

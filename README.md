@@ -14,7 +14,27 @@ A Windows app for laptops with a built-in LTE modem. It was built for the **Dell
 ## Download
 
 Get the MSI from [Releases](../../releases). It installs per-user and needs no admin rights.
-It isn't code-signed, so SmartScreen will ask you to confirm (*More info → Run anyway*).
+
+### Code signing
+The MSI and the app are Authenticode-signed and timestamped with a **self-signed** certificate,
+*Surin Athukorala (Cellular Studio code signing)*, SHA-1 thumbprint `0FA0531163DABC4B48E009C2F266C9004864C526`.
+A self-signed certificate proves the files haven't been modified since signing, but Windows doesn't trust it by default.
+On a new PC you'll see "Unknown publisher" and a SmartScreen prompt (*More info → Run anyway*) unless you trust the certificate first:
+
+1. Download [`CellularStudio-codesign.cer`](app/installer/CellularStudio-codesign.cer) (also attached to each release).
+2. Check that its thumbprint matches the one above (*double-click → Details → Thumbprint*).
+3. Trust it for your user account (PowerShell):
+   ```powershell
+   certutil -user -addstore Root .\CellularStudio-codesign.cer
+   certutil -user -addstore TrustedPublisher .\CellularStudio-codesign.cer
+   ```
+   To undo this, delete the certificate from *Trusted Root Certification Authorities* and *Trusted Publishers* in `certmgr.msc`.
+
+Only trust a certificate whose thumbprint you've verified.
+
+## License
+
+[MIT](LICENSE) © 2026 Surin Athukorala
 
 ## Repository layout
 

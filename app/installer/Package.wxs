@@ -8,7 +8,7 @@
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <Package Name="Cellular Studio"
-           Manufacturer="Cellular Studio"
+           Manufacturer="Surin Athukorala"
            Version="$(var.Version)"
            UpgradeCode="CA4701A0-48DE-4B7E-A780-16590AD65C67"
            Scope="perUser"
