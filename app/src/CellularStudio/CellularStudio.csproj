@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms only for the system tray NotifyIcon -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- WPF needs the manifest DPI settings; the WinForms analyzer doesn't apply -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <AssemblyName>CellularStudio</AssemblyName>
+    <RootNamespace>CellularStudio</RootNamespace>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>Cellular Studio</Product>
+    <Description>SMS and USSD for the built-in LTE modem</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- avoid WinForms/WPF type ambiguities (Application, Button, …) -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cellular.Core\Cellular.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <None Include="Assets\Carriers\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

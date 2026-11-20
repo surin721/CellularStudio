@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Cellular.Cli/Cellular.Cli.csproj" />
+    <Project Path="src/Cellular.Core/Cellular.Core.csproj" />
+    <Project Path="src/CellularStudio/CellularStudio.csproj" />
+  </Folder>
+</Solution>

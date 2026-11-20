@@ -1,0 +1,265 @@
+<UserControl x:Class="CellularStudio.Views.UssdView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CellularStudio.ViewModels"
+             xmlns:core="clr-namespace:Cellular.Core;assembly=Cellular.Core"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:MainViewModel}" d:DesignWidth="950" d:DesignHeight="740">
+    <Grid Margin="32,4,32,32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="320"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.ColumnSpan="2" Margin="0,0,0,20">
+            <TextBlock Text="USSD" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="Run operator codes and navigate service menus" Style="{StaticResource Body}" Margin="0,4,0,0"/>
+
+            <!-- LTE limitation -->
+            <Border Margin="0,16,0,0" Padding="16,14" CornerRadius="10" Background="{StaticResource SubtleBg}"
+                    BorderBrush="{StaticResource Border}" BorderThickness="1"
+                    Visibility="{Binding Status.IsRegistered, Converter={StaticResource Vis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Top" Margin="0,2,12,0"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="USSD doesn't work on LTE with this modem" FontWeight="SemiBold"/>
+                        <TextBlock Style="{StaticResource Body}" FontSize="12.5" Margin="0,3,0,0"
+                                   Text="The modem is registered for data only, so USSD requests fail and briefly knock it off the network (the app reconnects automatically). Check your balance with the Hutch app or website instead."/>
+                    </StackPanel>
+                    <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AllowUssdOnLte}" VerticalAlignment="Center" Margin="16,0,0,0"
+                              ToolTip="Send USSD requests anyway">
+                        <TextBlock Text="Try anyway" Foreground="{StaticResource TextSecondary}"/>
+                    </CheckBox>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- ───── Session ───── -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1" Padding="20,14">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Session" Style="{StaticResource SectionTitle}"/>
+                            <Border Style="{StaticResource Pill}" Margin="10,0,0,0" Padding="9,2" Background="{StaticResource AccentSoft}"
+                                    Visibility="{Binding UssdAwaitingReply, Converter={StaticResource Vis}}">
+                                <TextBlock Text="Waiting for your reply" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource Accent}"/>
+                            </Border>
+                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0" Visibility="{Binding UssdBusy, Converter={StaticResource Vis}}">
+                                <ContentControl Style="{StaticResource Spinner}" Width="14" Height="14"/>
+                                <TextBlock Text="Contacting network…" Style="{StaticResource Caption}" Margin="7,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButton}" Command="{Binding EndUssdCommand}"
+                                    Visibility="{Binding UssdAwaitingReply, Converter={StaticResource Vis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE711;" FontSize="11" Margin="0,0,6,0"/>
+                                    <TextBlock Text="End session"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Clear transcript" Command="{Binding ClearTranscriptCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- input -->
+                <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Padding="18,14">
+                    <StackPanel>
+                        <!-- menu options -->
+                        <ItemsControl ItemsSource="{Binding MenuOptions}" Margin="0,0,0,10"
+                                      Visibility="{Binding MenuOptions.Count, Converter={StaticResource Vis}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:MenuOption}">
+                                    <Button Style="{StaticResource ChipButton}" Margin="0,0,8,8" MaxWidth="260"
+                                            Command="{Binding DataContext.ChooseOptionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" ToolTip="{Binding Label}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Background="{StaticResource Accent}" CornerRadius="8" MinWidth="18" Height="18" Padding="5,0" Margin="-4,0,8,0">
+                                                <TextBlock Text="{Binding Key}" Foreground="White" FontSize="11" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="UssdBox" Style="{StaticResource InputBox}" FontFamily="{StaticResource MonoFont}" FontSize="16"
+                                     Tag="{Binding UssdPlaceholder}" Text="{Binding UssdInput, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding UssdBusy, Converter={StaticResource Not}}" KeyDown="UssdBox_KeyDown" MinHeight="42"/>
+                            <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" MinWidth="96" MinHeight="42"
+                                    Command="{Binding SendUssdCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE724;" FontSize="13" Foreground="White" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding UssdSendLabel}"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- transcript -->
+                <Grid>
+                    <ScrollViewer x:Name="TranscriptScroll" VerticalScrollBarVisibility="Auto" Padding="20,16">
+                        <ItemsControl ItemsSource="{Binding UssdTranscript}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:UssdBubble}">
+                                    <Grid>
+                                        <!-- system line -->
+                                        <Grid x:Name="sys" Visibility="Collapsed" Margin="0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Height="1" Background="{StaticResource Border}"/>
+                                            <TextBlock x:Name="sysText" Grid.Column="1" Text="{Binding Text}" Style="{StaticResource Caption}" Margin="12,0"/>
+                                            <Border Grid.Column="2" Height="1" Background="{StaticResource Border}"/>
+                                        </Grid>
+                                        <!-- bubble -->
+                                        <StackPanel x:Name="row" HorizontalAlignment="Left" Margin="0,4" MaxWidth="560">
+                                            <Border x:Name="bubble" Background="{StaticResource BubbleIn}" CornerRadius="16,16,16,4" Padding="14,10">
+                                                <TextBox x:Name="text" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                                         TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}" FontSize="14" Padding="0"/>
+                                            </Border>
+                                            <TextBlock x:Name="time" Text="{Binding Time, StringFormat=HH:mm:ss}" Style="{StaticResource Caption}" FontSize="11"
+                                                       Margin="6,3,6,0" HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding FromUser}" Value="True">
+                                            <Setter TargetName="row" Property="HorizontalAlignment" Value="Right"/>
+                                            <Setter TargetName="bubble" Property="Background" Value="{StaticResource BubbleOut}"/>
+                                            <Setter TargetName="bubble" Property="CornerRadius" Value="16,16,4,16"/>
+                                            <Setter TargetName="text" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="text" Property="FontFamily" Value="{StaticResource MonoFont}"/>
+                                            <Setter TargetName="time" Property="HorizontalAlignment" Value="Right"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsError}" Value="True">
+                                            <Setter TargetName="bubble" Property="Background" Value="{StaticResource DangerSoft}"/>
+                                            <Setter TargetName="text" Property="Foreground" Value="#9B2C2C"/>
+                                            <Setter TargetName="sysText" Property="Foreground" Value="{StaticResource Danger}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsSystem}" Value="True">
+                                            <Setter TargetName="sys" Property="Visibility" Value="Visible"/>
+                                            <Setter TargetName="row" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <!-- empty state -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False"
+                                Visibility="{Binding UssdTranscript.Count, Converter={StaticResource InvVis}}">
+                        <Border Width="72" Height="72" CornerRadius="36" Background="{StaticResource AccentSoft}" HorizontalAlignment="Center">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE75F;" FontSize="28" Foreground="{StaticResource Accent}"/>
+                        </Border>
+                        <TextBlock Text="Start with a code" Style="{StaticResource SectionTitle}" FontSize="17" HorizontalAlignment="Center" Margin="0,18,0,4"/>
+                        <TextBlock Text="Type a USSD code below or pick a quick code on the right." Style="{StaticResource Body}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </DockPanel>
+        </Border>
+
+        <!-- ───── Side column ───── -->
+        <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="Quick codes" Style="{StaticResource SectionTitle}" Margin="4,0,0,12"/>
+                        <ItemsControl ItemsSource="{Binding QuickCodes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:QuickCode}">
+                                    <Button Style="{StaticResource ActionTile}" Margin="0,0,0,8" Padding="12,10"
+                                            Command="{Binding DataContext.RunCodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding Code}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="34" Height="34" CornerRadius="9" Background="{StaticResource AccentSoft}">
+                                                <TextBlock Style="{StaticResource Icon}" Text="{Binding Glyph}" FontSize="14" Foreground="{StaticResource Accent}"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                                <TextBlock Text="{Binding Code}" FontFamily="{StaticResource MonoFont}" Style="{StaticResource Caption}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Style="{StaticResource Icon}" Text="&#xE768;" FontSize="12" Foreground="{StaticResource TextTertiary}"/>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="No codes known for this carrier yet." Style="{StaticResource Caption}" Margin="4,0,0,4"
+                                   Visibility="{Binding QuickCodes.Count, Converter={StaticResource InvVis}}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Padding="16" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="History" Style="{StaticResource SectionTitle}" Margin="4,0,0,10"/>
+                        <ItemsControl ItemsSource="{Binding UssdHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type core:UssdLogEntry}">
+                                    <Border Padding="4,8" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
+                                        <StackPanel>
+                                            <Grid>
+                                                <TextBlock x:Name="req" Text="{Binding Request}" FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" FontSize="12.5"/>
+                                                <TextBlock Text="{Binding Timestamp, Converter={StaticResource RelTime}, ConverterParameter=short}" Style="{StaticResource Caption}"
+                                                           HorizontalAlignment="Right"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Response}" Style="{StaticResource Caption}" FontSize="12" TextWrapping="Wrap"
+                                                       MaxHeight="34" TextTrimming="CharacterEllipsis" Margin="0,3,0,0" ToolTip="{Binding Response}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Failed}" Value="True">
+                                            <Setter TargetName="req" Property="Foreground" Value="{StaticResource Danger}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="Codes you run appear here." Style="{StaticResource Caption}" Margin="4,0,0,4"
+                                   Visibility="{Binding UssdHistory.Count, Converter={StaticResource InvVis}}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,16,0,0" Padding="14,12" CornerRadius="10" Background="{StaticResource SubtleBg}" BorderBrush="{StaticResource Border}" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" FontSize="13" Foreground="{StaticResource TextSecondary}" Margin="0,0,8,0"/>
+                            <TextBlock Text="Good to know" FontWeight="SemiBold" FontSize="12.5"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,0"
+                                   Text="USSD needs the modem to be registered on the network. Menus time out after about 30 seconds of inactivity; just run the code again."/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,21 @@
+# build output
+bin/
+obj/
+app/publish/
+app/dist/
+*.wixpdb
+
+# generated installer artwork (installer/make-artwork.ps1 runs during the build)
+app/installer/banner.bmp
+app/installer/dialog.bmp
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+
+# private notes with device/SIM identifiers — never commit
+CLAUDE.local.md
+.claude/settings.local.json

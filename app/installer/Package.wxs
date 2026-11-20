@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cellular Studio installer (WiX Toolset v5). Build with installer\build-installer.ps1.
+  Per-user MSI: no admin prompt; installs to %LOCALAPPDATA%\Programs\Cellular Studio.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="Cellular Studio"
+           Manufacturer="Cellular Studio"
+           Version="$(var.Version)"
+           UpgradeCode="CA4701A0-48DE-4B7E-A780-16590AD65C67"
+           Scope="perUser"
+           Compressed="yes">
+
+    <SummaryInformation Description="Cellular Studio – SMS, balance and modem tools" />
+
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of Cellular Studio is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Apps & Features entry -->
+    <Icon Id="AppIcon" SourceFile="$(var.SrcDir)\CellularStudio\Assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPCONTACT" Value="Cellular Studio" />
+    <Property Id="ARPCOMMENTS" Value="SMS, balance and modem tools for the built-in LTE modem" />
+
+    <!-- The app hides to the tray on WM_CLOSE, so terminate it if it is still running after the close request. -->
+    <util:CloseApplication Id="CloseCellularStudio" Target="CellularStudio.exe"
+                           CloseMessage="yes" EndSessionMessage="yes" TerminateProcess="0"
+                           Timeout="3" RebootPrompt="no" />
+
+    <!-- ── Layout ─────────────────────────────────────────────── -->
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsDir" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="Cellular Studio" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- ── Components ─────────────────────────────────────────── -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Component Id="MainExe" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D01">
+        <File Id="CellularStudioExe" Source="$(var.PublishDir)\CellularStudio.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="Readme" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D02">
+        <File Id="ReadmeMd" Source="$(var.AppDir)\README.md" KeyPath="yes" />
+      </Component>
+      <!-- per-user install bookkeeping: lets MSI track the folder in the user profile -->
+      <Component Id="InstallDirReg" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D03">
+        <RegistryValue Root="HKCU" Key="Software\CellularStudio\Installer" Name="InstallDir"
+                       Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveProgramsDir" Directory="ProgramsDir" On="uninstall" />
+      </Component>
+    </ComponentGroup>
+
+    <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D04">
+      <Shortcut Id="StartMenuLink" Name="Cellular Studio" Description="SMS, balance and modem tools"
+                Target="[#CellularStudioExe]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+      <RegistryValue Root="HKCU" Key="Software\CellularStudio\Installer" Name="StartMenuShortcut"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D05">
+      <Shortcut Id="DesktopLink" Name="Cellular Studio" Description="SMS, balance and modem tools"
+                Target="[#CellularStudioExe]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+      <RegistryValue Root="HKCU" Key="Software\CellularStudio\Installer" Name="DesktopShortcut"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Same value the app's own "Start with Windows" switch writes: starts hidden with only the tray icon -->
+    <Component Id="RunAtSignIn" Directory="INSTALLFOLDER" Guid="B3E1C1B2-6E57-4C4B-9C7E-2F0B6C8A1D06">
+      <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="CellularStudio"
+                     Type="string" Value="&quot;[#CellularStudioExe]&quot; --tray" KeyPath="yes" />
+    </Component>
+
+    <!-- ── Features (shown in the Custom Setup tree) ──────────── -->
+    <Feature Id="Main" Title="Cellular Studio" Description="The application and Start menu shortcut."
+             Level="1" AllowAbsent="no" AllowAdvertise="no" ConfigurableDirectory="INSTALLFOLDER" Display="expand">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+
+      <Feature Id="Startup" Title="Start with Windows"
+               Description="Start hidden at sign-in with only the tray icon, so incoming SMS are never missed. Can be changed later in the app."
+               Level="1" AllowAdvertise="no">
+        <ComponentRef Id="RunAtSignIn" />
+      </Feature>
+
+      <Feature Id="Desktop" Title="Desktop shortcut" Description="Add a shortcut to the desktop."
+               Level="1000" AllowAdvertise="no">
+        <ComponentRef Id="DesktopShortcut" />
+      </Feature>
+    </Feature>
+
+    <!-- If the user enabled "Start with Windows" from inside the app (not via the installer feature),
+         the Run value isn't owned by MSI — remove it explicitly on a real uninstall. -->
+    <SetProperty Id="CleanupRunKey" Sequence="execute" Before="CleanupRunKey"
+                 Value="&quot;[System64Folder]reg.exe&quot; delete &quot;HKCU\Software\Microsoft\Windows\CurrentVersion\Run&quot; /v CellularStudio /f" />
+    <CustomAction Id="CleanupRunKey" BinaryRef="Wix4UtilCA_X64" DllEntry="WixQuietExec"
+                  Execute="deferred" Impersonate="yes" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="CleanupRunKey" Before="RemoveRegistryValues"
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+    </InstallExecuteSequence>
+
+    <!-- ── UI ─────────────────────────────────────────────────── -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Cellular Studio" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#CellularStudioExe]" />
+    <CustomAction Id="LaunchApplication" BinaryRef="Wix4UtilCA_X64" DllEntry="WixShellExec" Impersonate="yes" />
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+    <UI>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+  </Package>
+</Wix>
