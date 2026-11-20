@@ -203,7 +203,7 @@ public sealed partial class MainViewModel : ObservableObject
             var s = await Task.Run(() => ModemStatusReader.ReadAsync());
             var prev = _lastReg;
             Status = s;
-            var brand = Carriers.Resolve(s.BrandingId, s.CarrierDisplayName);
+            var brand = Carriers.Resolve(s.BrandingId, s.CarrierDisplayName, _data.CarrierOverrides);
             if (brand != Brand) Brand = brand;
             LogoPath = Carriers.FindLogo(brand);
             OnPropertyChanged(nameof(CarrierName));
@@ -224,6 +224,7 @@ public sealed partial class MainViewModel : ObservableObject
             CheckBalanceCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(BalanceMethodText));
             CheckAutoRecover(s);
+            CheckSimChanged();
             if (_smsStarted) MaybeAutoRefreshBalance();
             MaybePollInbox();
         }

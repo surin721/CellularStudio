@@ -148,6 +148,19 @@ SMS/USSD app in `app/`. Newest findings are added at the bottom of each section.
 - Dev helpers: `app/tools/screenshot.ps1` (PrintWindow capture), `app/tools/nav.ps1` (UIA page switch), `app/tools/make-icon.ps1`.
 - Windows DPI: screen work area is ~690 DIP tall at 150% → window size is clamped to the work area at startup.
 
+### Multi-carrier support (2026-11-21, v1.1.0)
+- Profiles in `Cellular.Core/Carriers.cs`, keyed `hutch` / `dialog` / `mobitel`. MNC map (Wikipedia ITU 4xx list):
+  01,12 SLTMobitel · 02,05(ex-Airtel),11 Dialog · 08,03(ex-Etisalat),09 Hutch. Name-based fallback only for MCC 413/unknown
+  (Indian "Airtel" must not become Dialog).
+- **Only Hutch's SMS balance method is verified.** Researched dialog.lk (self-help, dial-codes, IVR, help-guide, faq) and
+  sltmobitel.lk (JS-only pages): no SMS balance keyword/number published. Dialog documents `#678#` menu and IVR 1777 /
+  077 7123 456. Do NOT hard-code Dialog/Mobitel keywords from memory — users enter them (Device → Carrier & balance),
+  stored as `CarrierOverrides` in data.json. Brand colours for Dialog/SLTMobitel are approximations (not found officially).
+- Logos: user picks an image → `%LOCALAPPDATA%\CellularStudio\logos\<key>.png`; no operator logos are shipped (trademarks).
+- BalanceParser is carrier-agnostic (credit/expiry/data phrasings, dd/mm/yyyy, yyyy-mm-dd, 21-Dec-2026); test with
+  `cellular parse "<text>"`; resolution with `cellular carrier <mccmnc> [name]`. Only Hutch tested with real replies.
+- Saved balance is tied to the SIM's IMSI (`LastBalanceImsi`, local only); a different SIM clears it.
+
 ### Installer (2026-11-21)
 - WiX Toolset **v5.0.2** as a global dotnet tool (`%USERPROFILE%\.dotnet\tools\wix.exe`) + `WixToolset.UI.wixext`,
   `WixToolset.Util.wixext` (global extension cache). Needs `DOTNET_ROOT=%LOCALAPPDATA%\Microsoft\dotnet` and

@@ -58,10 +58,19 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 - **Signal:** only RSSI, signal level and an error-rate class are available. This driver doesn't report RSRP/RSRQ/SINR,
   cell IDs or neighbouring towers.
 
-### Carrier logo
-The app ships with brand-colored monogram badges. To show a real logo, drop a PNG named after the MCC+MNC
-(e.g. `41308.png`) or the carrier name (`hutch.png`) into `%LOCALAPPDATA%\CellularStudio\logos\`
-(or `Assets\Carriers\` next to the exe when building from source).
+### Carriers, balance method and logo
+Built-in profiles: **Hutch** (verified SMS balance `BAL` → 344), **Dialog** and **SLTMobitel**. The last two have
+no published SMS balance method, so you enter theirs. Profiles live in `src/Cellular.Core/Carriers.cs`.
+
+Under **Device → Carrier & balance** you can set the balance SMS number and keyword, the reply senders, and a logo.
+These are saved per carrier in `data.json` (`CarrierOverrides`), and *Reset to default* removes them. If no method is set,
+*Check balance* takes you to this card.
+
+**Choose logo…** copies the image to `%LOCALAPPDATA%\CellularStudio\logos\<carrier>.png` (`hutch`, `dialog`,
+`mobitel`, or the MCC+MNC for other operators). No operator logos ship with the app; without one, a monogram in the
+brand colour is shown.
+
+A saved balance belongs to the SIM it was read from. Inserting a different SIM clears it.
 
 ## Data
 Messages, USSD history, and the last balance are stored in `%LOCALAPPDATA%\CellularStudio\data.json`.

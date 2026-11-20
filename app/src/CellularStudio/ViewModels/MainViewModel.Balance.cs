@@ -32,8 +32,8 @@ public sealed partial class MainViewModel
 
     /// <summary>How the balance is obtained, shown under the quick action.</summary>
     public string BalanceMethodText => UseSmsForBalance
-        ? $"SMS {Brand.BalanceSmsText} to {Brand.BalanceSmsNumber} · free"
-        : string.IsNullOrEmpty(Brand.BalanceCode) ? "Not available for this carrier" : $"Runs {Brand.BalanceCode}";
+        ? $"SMS {Brand.BalanceSmsText} to {Brand.BalanceSmsNumber}{(Brand.BalanceSmsVerified ? " · free" : "")}"
+        : "Set up for " + Brand.Name;
 
     // USSD is unreliable on this modem (drops LTE registration), so prefer the SMS query whenever the carrier has one.
     private bool UseSmsForBalance => Brand.HasSmsBalance;
@@ -96,12 +96,21 @@ public sealed partial class MainViewModel
 
     // ───────────── Check balance (SMS first, USSD where it works) ─────────────
 
-    private bool CanCheckBalance() => !BalanceBusy && !UssdBusy && (Brand.HasSmsBalance || !string.IsNullOrEmpty(Brand.BalanceCode));
+    private bool CanCheckBalance() => !BalanceBusy && !UssdBusy && Status.ModemPresent;
+
+    /// <summary>Raised when the user should be taken to the carrier settings card (no balance method yet).</summary>
+    public event Action? CarrierSetupRequested;
 
     [RelayCommand(CanExecute = nameof(CanCheckBalance))]
-    private Task CheckBalance() => UseSmsForBalance
-        ? RequestBalanceBySmsAsync(auto: false)
-        : RunUssdAsync(Brand.BalanceCode, newSession: true);
+    private Task CheckBalance()
+    {
+        if (UseSmsForBalance) return RequestBalanceBySmsAsync(auto: false);
+        CurrentPage = "Device";
+        CarrierSetupRequested?.Invoke();
+        ShowToast(ToastKind.Info, $"Set up balance checking for {Brand.Name}",
+            "Enter the operator's balance SMS keyword and short number under Carrier & balance.");
+        return Task.CompletedTask;
+    }
 
     private async Task RequestBalanceBySmsAsync(bool auto)
     {
@@ -174,6 +183,7 @@ public sealed partial class MainViewModel
     {
         var f = from.Trim();
         return f.Equals(Brand.Name, StringComparison.OrdinalIgnoreCase)
+               || Brand.SenderIds.Any(s => f.Equals(s.Trim(), StringComparison.OrdinalIgnoreCase))
                || (Brand.HasSmsBalance && PhoneFormat.Key(f) == PhoneFormat.Key(Brand.BalanceSmsNumber))
                || (Status.SimSpn.Length > 0 && f.Equals(Status.SimSpn, StringComparison.OrdinalIgnoreCase));
     }
@@ -229,7 +239,23 @@ public sealed partial class MainViewModel
         _data.LastBalance = merged;
         _data.LastBalanceRaw = parsed.RawText;
         _data.LastBalanceAt = merged.RetrievedAt;
+        if (Status.Imsi.Length > 0) _data.LastBalanceImsi = Status.Imsi;
         Save();
+    }
+
+    /// <summary>Clears the saved balance when a different SIM is inserted.</summary>
+    private void CheckSimChanged()
+    {
+        if (Balance is null || Status.Imsi.Length == 0) return;
+        if (_data.LastBalanceImsi is null) { _data.LastBalanceImsi = Status.Imsi; Save(); return; }
+        if (_data.LastBalanceImsi == Status.Imsi) return;
+        Log("Balance", "Different SIM detected — clearing the previous SIM's balance");
+        Balance = null;
+        _data.LastBalance = null;
+        _data.LastBalanceRaw = null;
+        _data.LastBalanceImsi = Status.Imsi;
+        Save();
+        _lastAutoBalance = DateTimeOffset.MinValue;   // allow an immediate refresh for the new SIM
     }
 
     /// <summary>Called from the UI clock so the "Updated x min ago" label stays fresh.</summary>

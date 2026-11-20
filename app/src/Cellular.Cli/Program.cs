@@ -127,6 +127,16 @@ switch (args[0].ToLowerInvariant())
         return 0;
     }
 
+    case "carrier":
+    {
+        // usage: cellular carrier <mccmnc> [network name]
+        var b = Carriers.Resolve(args[1], args.Length > 2 ? string.Join(' ', args.Skip(2)) : "");
+        Console.WriteLine($"{args[1],-6} → key={b.Key} name={b.Name} mono={b.Monogram} color={b.BrandColor} known={b.IsKnown}");
+        Console.WriteLine($"        balanceSMS='{b.BalanceSmsText}'→{b.BalanceSmsNumber} verified={b.BalanceSmsVerified} menu={b.MenuCode} helpline={b.Helpline}");
+        Console.WriteLine($"        senders=[{string.Join(", ", b.SenderIds)}]");
+        return 0;
+    }
+
     case "parse":
     {
         var b = BalanceParser.Parse(string.Join(' ', args.Skip(1)));

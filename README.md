@@ -5,11 +5,30 @@ A Windows app for laptops with a built-in LTE modem. It was built for the **Dell
 
 - **send and receive SMS**, with conversations, a GSM-7/Unicode segment counter, and correct decoding of
   multi-part operator messages (Windows' decoder shows "@@@@" for them);
-- **show your balance** (credit, data packages with expiry dates, validity) by sending the operator's free SMS
-  balance query and reading the reply (Hutch: `BAL` to 344);
+- **show your balance** (credit, data packages with expiry dates, validity) by sending the operator's SMS
+  balance query and reading the reply. Hutch works out of the box (`BAL` to 344). For other operators you can enter
+  the method yourself (see [Carriers](#carriers));
 - **keep the modem online**: it detects when the modem is stuck "Searching" and re-registers it automatically;
 - show modem, SIM and network details (RSSI, signal level, error rate) and the modem's real capabilities;
 - run from the **system tray**, optionally starting with Windows.
+
+## Carriers
+
+| Operator | Networks (MCC 413) | Balance by SMS | Notes |
+|---|---|---|---|
+| **Hutch** | 08, 03 (ex-Etisalat), 09 | ✅ `BAL` → 344, built in, free ([source](https://hutch.lk/account-balance/)) | Verified end-to-end |
+| **Dialog** | 02, 05 (ex-Airtel), 11 | ⚙️ enter it yourself | Dialog doesn't publish an SMS balance query; documented options are `#678#` and helpline 1777 |
+| **SLTMobitel** | 01, 12 | ⚙️ enter it yourself | No SMS balance query found on sltmobitel.lk |
+| Any other | — | ⚙️ enter it yourself | Shown with a monogram badge |
+
+The **Device → Carrier & balance** card lets you, for each operator:
+- set the balance SMS **number** and **keyword**;
+- set which **senders'** replies count as balance statements;
+- pick a **logo image** for the carrier badge. Without one, the app shows a monogram in the operator's colour.
+
+The reply parser isn't tied to Hutch. It understands common formats such as `Balance is Rs. 123.45, valid till 31/12/2026`
+and `Anytime Data 1.5GB valid until 21-Dec-2026`. Only Hutch's format has been verified with real messages.
+If your operator's reply isn't parsed, please open an issue with an anonymised sample.
 
 ## Download
 

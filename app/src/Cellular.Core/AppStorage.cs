@@ -34,10 +34,14 @@ public sealed class AppData
     public BalanceInfo? LastBalance { get; set; }
     public string? LastBalanceRaw { get; set; }
     public DateTimeOffset? LastBalanceAt { get; set; }
+    /// <summary>IMSI of the SIM the saved balance belongs to (local only), so a different SIM doesn't show it.</summary>
+    public string? LastBalanceImsi { get; set; }
     public string? DataBalanceCode { get; set; }
     public string? MyNumber { get; set; }
     /// <summary>USSD on LTE fails and drops registration on the XMM7360/Hutch; off unless the user opts in.</summary>
     public bool AllowUssdOnLte { get; set; }
+    /// <summary>Per-carrier user overrides (balance SMS method, reply senders), keyed by CarrierBrand.Key.</summary>
+    public Dictionary<string, CarrierOverride> CarrierOverrides { get; set; } = [];
 }
 
 /// <summary>Local JSON persistence under %LOCALAPPDATA%\CellularStudio.</summary>

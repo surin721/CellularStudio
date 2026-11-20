@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:CellularStudio.ViewModels"
+             xmlns:c="clr-namespace:CellularStudio.Controls"
              mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:MainViewModel}" d:DesignWidth="950" d:DesignHeight="900">
     <UserControl.Resources>
         <DataTemplate x:Key="DetailRowTemplate" DataType="{x:Type vm:DetailRow}">
@@ -126,6 +127,98 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <!-- Carrier & balance -->
+            <Border x:Name="CarrierCard" Style="{StaticResource Card}" Margin="0,16,0,0">
+                <StackPanel>
+                    <StackPanel Style="{StaticResource CardHeader}">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE8C7;" Foreground="{StaticResource Accent}" Margin="0,0,10,0"/>
+                        <TextBlock Text="Carrier &amp; balance" Style="{StaticResource SectionTitle}"/>
+                    </StackPanel>
+
+                    <!-- carrier identity -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <c:CarrierBadge Width="48" Height="48" LogoPath="{Binding LogoPath}" Monogram="{Binding Brand.Monogram}"
+                                        BrandColor="{Binding Brand.BrandColor}"/>
+                        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Brand.Name}" FontSize="16" FontWeight="SemiBold"/>
+                                <Border x:Name="MethodPill" Style="{StaticResource Pill}" Margin="10,0,0,0" Padding="9,2" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MethodPillText" Text="{Binding CarrierMethodStatus}" FontSize="11.5" FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Caption}" Margin="0,3,0,0">
+                                <Run Text="Network"/> <Run Text="{Binding Brand.Id, Mode=OneWay}"/>
+                                <Run Text="{Binding CarrierMenuCodes, Mode=OneWay, StringFormat=  ·  {0}}"/>
+                                <Run Text="{Binding CarrierHelpline, Mode=OneWay, StringFormat=  ·  {0}}"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Command="{Binding ChooseLogoCommand}" MinHeight="32" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xEB9F;" FontSize="13" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Choose logo…"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource GhostButton}" Content="Remove" Margin="6,0,0,0" Command="{Binding RemoveLogoCommand}"
+                                    Visibility="{Binding HasLogo, Converter={StaticResource Vis}}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="{Binding CarrierHint}" Style="{StaticResource Body}" FontSize="12.5" Margin="0,14,0,0"/>
+
+                    <!-- balance SMS method -->
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="BALANCE SMS TO" Style="{StaticResource Overline}" Margin="0,0,0,6"/>
+                            <TextBox Style="{StaticResource InputBox}" Tag="Short number" FontFamily="{StaticResource MonoFont}"
+                                     x:Name="CarrierNumberBox" Text="{Binding CarrierSmsNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="MESSAGE TEXT" Style="{StaticResource Overline}" Margin="0,0,0,6"/>
+                            <TextBox Style="{StaticResource InputBox}" Tag="Keyword, e.g. BAL" FontFamily="{StaticResource MonoFont}"
+                                     Text="{Binding CarrierSmsText, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="ACCEPT REPLIES FROM" Style="{StaticResource Overline}" Margin="0,0,0,6"/>
+                            <TextBox Style="{StaticResource InputBox}" Tag="Sender names, comma separated"
+                                     Text="{Binding CarrierSenderIds, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Messages from these senders that look like a balance statement update the Overview tiles."/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Style="{StaticResource PrimaryButton}" Content="Save" Command="{Binding SaveCarrierSettingsCommand}" MinWidth="90"/>
+                        <Button Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Command="{Binding CheckBalanceCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" FontSize="13" Margin="0,0,8,0"/>
+                                <TextBlock Text="Check balance now"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource GhostButton}" Content="Reset to default" Margin="8,0,0,0" Command="{Binding ResetCarrierSettingsCommand}"
+                                Visibility="{Binding CarrierHasOverride, Converter={StaticResource Vis}}"/>
+                        <Button Style="{StaticResource GhostButton}" Margin="8,0,0,0" Command="{Binding OpenCarrierWebsiteCommand}"
+                                Visibility="{Binding Brand.Website, Converter={StaticResource Vis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Operator website"/>
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8A7;" FontSize="11" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
             <!-- App settings -->
             <Border Style="{StaticResource Card}" Margin="0,16,0,0">
