@@ -162,6 +162,16 @@ SMS/USSD app in `app/`. Newest findings are added at the bottom of each section.
   (`ProductsEx`), not the HKCU Uninstall key.
 - Output: `app/dist/CellularStudio-<ver>-x64.msi` (~73 MB, self-contained runtime inside).
 
+### GitHub (2026-11-21)
+- Public repo **https://github.com/surin721/CellularStudio** (branch `main`), release **v1.0.0** with
+  `CellularStudio-1.0.0-x64.msi` (SHA-256 `3B65242274E8331A26F4443781F2CA7F121B1F9A2F2A79AB4CE92BA89F684B6B`).
+- gh CLI (per-user winget install): `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GitHub.cli_Microsoft.Winget.Source_8wekyb3d8bbwe\bin\gh.exe`;
+  `gh auth setup-git` done. Repo-local commit email = GitHub noreply (global git email is a work address — keep it out).
+- **Public repo rule:** device/SIM identifiers and the user's phone number live only in `CLAUDE.local.md` (git-ignored).
+  Before every commit: `git grep --cached` for them. No screenshots of the Device/Messages pages.
+- New release: bump `<Version>` in `app/Directory.Build.props` → `app/installer/build-installer.ps1` →
+  `gh release create vX.Y.Z app/dist/CellularStudio-X.Y.Z-x64.msi --notes-file …`.
+
 ## Open items
 - [x] Recover modem registration (done via SetRegisterMode, no reboot).
 - [x] SMS receive verified. USSD on LTE verified NOT working (drops registration) → blocked by default in app.
