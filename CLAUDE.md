@@ -176,7 +176,10 @@ SMS/USSD app in `app/`. Newest findings are added at the bottom of each section.
 ### Code signing (2026-11-21)
 - **Self-signed** cert `CN=Surin Athukorala (Cellular Studio code signing)`, RSA-3072/SHA-256, thumbprint
   `0FA0531163DABC4B48E009C2F266C9004864C526`, valid to 2031-11-21. Private key in `Cert:\CurrentUser\My`
-  (exportable; **no PFX on disk** — back it up yourself if needed, never into the repo). Public part:
+  (exportable). **Backup** (2026-11-21): password-protected PFX (AES256-SHA256) at
+  `%USERPROFILE%\OneDrive\Documents\CellularStudio-signing-backup\CellularStudio-codesign-0FA05311.pfx`
+  — Documents is OneDrive-redirected, so it syncs to the cloud. Password chosen by the user, stored only by them.
+  Never copy the PFX into the repo. Restore: `Import-PfxCertificate -FilePath <pfx> -CertStoreLocation Cert:\CurrentUser\My -Password (Read-Host -AsSecureString)`. Public part:
   `app/installer/CellularStudio-codesign.cer` (committed, also attached to releases).
 - Trusted on this PC via `certutil -user -addstore Root|TrustedPublisher` (Root needs a user click; the tool's
   non-interactive PowerShell can't show that dialog → run certutil as a separate process).
